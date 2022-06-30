@@ -1,24 +1,19 @@
 pipeline {
 	agent any
-	environment {
-		NEW_VERSION = '1.0.0'
+	parameters {
+		choice(name: 'VERSION', choices: ['1.1.0','1.2.0','1.3.0'], description: '')
+		booleanParam(name: 'executeTests', defaultValue: true, description: '')
 	}
 	stages {
 		stage("build") {
-			when {
-				expression {
-					env.GIT_BRANCH == 'origin/master'
-				}
-			}
 			steps {
 				echo 'building the applicaiton...'
-				echo "building version ${NEW_VERSION}"
 			}
 		}
 		stage("test") {
 			when {
 				expression {
-					env.GIT_BRANCH == 'origin/test' || env.GIT_BRANCH == ''
+					params.executeTests
 				}
 			}
 			steps {
@@ -27,26 +22,9 @@ pipeline {
 		}
 		stage("deploy") {
 			steps {
-				echo "deploying the applicaiton...'${env.GIT_BRANCH}'"
-				withCredentials([[$class: 'UsernamePasswordMultiBinding',
-					credentialsId: 'admin_user_credentials',
-					usernameVariable: 'USER', 
-					passwordVariable: 'PWD'
-				]]) {
-					sh 'printf ${USER}'
-				}
+				echo 'deploying the applicaiton...'
+				echo "deploying version ${params.VERSION}"
 			}
 		}
 	}
-	post {
-			always {
-				echo 'building..'
-			}
-			success {
-	            echo 'success'
-			}
-			failure {
-	            echo 'failure'
-			}
-		}
 }
